@@ -1,12 +1,21 @@
 package frc.robot.commands;
 
+import java.util.function.Consumer;
+
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import edu.wpi.first.wpilibj2.command.Subsystem;
 import frc.robot.subsystems.ArmSubsystem;
 
 public class MoveArmWithJoystick extends CommandBase {
   /** Creates a new MoveArmWithJoystick. */
-
+  // Set the scheduler to log Shuffleboard events for command initialize, interrupt, finish
+  CommandScheduler.getInstance()
+  .onCommandInitialize(
+      command ->
+          Shuffleboard.addEventMarker(
+              "Command initialized", command.getName(), EventImportance.kNormal));
   //initialize your subsystems, controllers
   XboxController joystick1;
   public MoveArmWithJoystick(ArmSubsystem armSubsystem, XboxController joystick1) {
@@ -21,6 +30,16 @@ public class MoveArmWithJoystick extends CommandBase {
   @Override
   public void execute() {
     double joystickArmPower = joystick1.getLeftY(); //use this joystick armpower to set power to your motors
+    m_scheduledCommands.add(command);
+    for (Subsystem requirement : requirements) {
+      m_requirements.put(requirement, command);
+    }
+    command.initialize();
+    for (Consumer<Command> action : m_initActions) {
+      action.accept(command);
+    }
+
+    m_watchdog.addEpoch(command.getName() + ".initialize()");
   }
 
 
